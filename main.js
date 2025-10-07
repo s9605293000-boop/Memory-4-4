@@ -293,4 +293,18 @@ document.querySelectorAll('.avatar.clickable').forEach(img=>{
   } else {
     initAgeGate();
   }
-})();
+})();// === Age Confirmation Fix ===
+document.addEventListener('DOMContentLoaded', () => {
+  const confirmBtn = document.getElementById('ageConfirm');
+  const ageModal = document.getElementById('ageGate');
+
+  if (confirmBtn && ageModal) {
+    confirmBtn.addEventListener('click', () => {
+      ageModal.classList.remove('show');
+      ageModal.style.display = 'none';
+      console.log('Age confirmed, modal closed');
+    });
+  } else {
+    console.warn('Age confirmation elements not found');
+  }
+});
