@@ -252,8 +252,45 @@ document.querySelectorAll('.avatar.clickable').forEach(img=>{
     img.classList.toggle('big');
   });
 });
-// Age Gate — закрыть модальное окно при нажатии
-document.getElementById('ageConfirm')?.addEventListener('click', () => {
-  const gate = document.getElementById('ageGate');
-  if (gate) gate.style.display = 'none';
-});
+// === Age Gate (18+) ===
+(function () {
+  function hideAgeGate() {
+    const gate = document.getElementById('ageGate');
+    if (!gate) return;
+    gate.classList.remove('show');
+    gate.style.display = 'none';
+    document.body.classList.remove('modal-open');
+    try { localStorage.setItem('age_ok', '1'); } catch (e) {}
+  }
+
+  // Делаем функцию доступной для onclick в HTML
+  window.confirmAge = hideAgeGate;
+
+  function initAgeGate() {
+    const gate = document.getElementById('ageGate');
+    if (!gate) return;
+
+    // Если уже подтверждали — сразу скрываем
+    try {
+      if (localStorage.getItem('age_ok') === '1') {
+        hideAgeGate();
+        return;
+      }
+    } catch (e) {}
+
+    // Навешиваем слушатель
+    const btn = document.getElementById('ageConfirm');
+    if (btn) {
+      btn.addEventListener('click', function (e) {
+        e.preventDefault();
+        hideAgeGate();
+      }, { passive: false });
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initAgeGate, { once: true });
+  } else {
+    initAgeGate();
+  }
+})();
