@@ -28,7 +28,17 @@ const langSelect = document.getElementById('langSelect');
 function setLang(l){ localStorage.setItem('lang', l); applyLang(l); }
 langSelect.addEventListener('change', e=> setLang(e.target.value));
 setLang(localStorage.getItem('lang') || 'en');
-
+// Проверка загрузки и подтверждение возраста
+document.addEventListener('DOMContentLoaded', () => {
+  const confirmBtn = document.getElementById('ageConfirm');
+  const ageGate = document.getElementById('ageGate');
+  if (confirmBtn && ageGate) {
+    confirmBtn.addEventListener('click', () => {
+      localStorage.setItem('age_ok', '1');
+      ageGate.classList.remove('show');
+    });
+  }
+});
 // Age gate
 const ageGate = document.getElementById('ageGate');
 document.getElementById('ageConfirm').onclick = ()=>{
