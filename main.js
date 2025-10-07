@@ -1,4 +1,4 @@
-
+бы
 import { applyLang } from './lang.js';
 
 // Language switch
@@ -251,4 +251,9 @@ document.querySelectorAll('.avatar.clickable').forEach(img=>{
   img.addEventListener('click',()=>{
     img.classList.toggle('big');
   });
+});
+// Age Gate — закрыть модальное окно при нажатии
+document.getElementById('ageConfirm')?.addEventListener('click', () => {
+  const gate = document.getElementById('ageGate');
+  if (gate) gate.style.display = 'none';
 });
