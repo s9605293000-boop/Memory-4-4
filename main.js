@@ -17,7 +17,12 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const analytics = getAnalytics(app);
 import { applyLang } from './lang.js';
-
+// Age gate
+const ageGate = document.getElementById('ageGate');
+document.getElementById('confirm').onclick = () => {
+  localStorage.setItem('age_ok', '1');
+  ageGate.classList.remove('show');
+};
 // Language switch
 const langSelect = document.getElementById('langSelect');
 function setLang(l){ localStorage.setItem('lang', l); applyLang(l); }
