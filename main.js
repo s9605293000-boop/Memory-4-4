@@ -1,4 +1,21 @@
-бы
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
+
+// Your web app's Firebase configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyCIaYXC8SjGbQeeqHr7avZKiJO_mPwQl_A",
+  authDomain: "memory-4-4.firebaseapp.com",
+  projectId: "memory-4-4",
+  storageBucket: "memory-4-4.firebasestorage.app",
+  messagingSenderId: "650806889779",
+  appId: "1:650806889779:web:0233412262142c01a40246",
+  measurementId: "G-KZ9S0B51WG"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
 import { applyLang } from './lang.js';
 
 // Language switch
