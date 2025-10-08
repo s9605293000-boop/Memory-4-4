@@ -1,28 +1,15 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Memory Duel v4-4</title>
-
-  <!-- PWA (минимум, потом расширим) -->
-  <link rel="manifest" href="manifest.webmanifest">
-  <meta name="theme-color" content="#f5f7fb">
-
   <link rel="stylesheet" href="styles.css">
+  <link rel="manifest" href="manifest.webmanifest">
 </head>
 <body>
-  <!-- Языки (правый верх) -->
-  <div id="topbar">
-    <select id="langSelect" aria-label="Language">
-      <option value="en">EN</option>
-      <option value="ru">RU</option>
-      <option value="es">ES</option>
-    </select>
-  </div>
-
-  <!-- Age Gate 18+ -->
-  <div id="ageGate" class="modal">
+  <!-- Age Gate -->
+  <div id="ageGate" class="modal show">
     <div class="modal-card">
       <h3 data-i18n="age_title">Age Confirmation</h3>
       <p data-i18n="age_text">You must be 18+ to play. Confirm to continue.</p>
@@ -30,106 +17,30 @@
     </div>
   </div>
 
-  <!-- Авторизация / Регистрация / Восстановление -->
+  <!-- Auth Views -->
   <main id="app">
-    <!-- Sign In -->
     <section id="view-login" class="view">
       <h1 data-i18n="login_title">Sign In</h1>
       <label>
         <span data-i18n="email">Email</span>
-        <input id="loginEmail" type="email" autocomplete="email" required />
+        <input id="loginEmail" type="email" autocomplete="email" required>
       </label>
       <label>
         <span data-i18n="password">Password</span>
-        <input id="loginPassword" type="password" autocomplete="current-password" required />
+        <input id="loginPassword" type="password" autocomplete="current-password" required>
       </label>
-      <button id="btnLogin" class="btn primary" data-i18n="login_btn">Sign In</button>
-
-      <div class="links">
-        <a href="#" id="toRegister" data-i18n="to_register">Create account</a>
-        <a href="#" id="toForgot" data-i18n="to_forgot">Forgot password?</a>
-      </div>
-    </section>
-
-    <!-- Register -->
-    <section id="view-register" class="view hidden">
-      <h1 data-i18n="register_title">Create account</h1>
-      <label>
-        <span data-i18n="email">Email</span>
-        <input id="regEmail" type="email" autocomplete="email" required />
-      </label>
-      <label>
-        <span data-i18n="password">Password</span>
-        <input id="regPassword" type="password" autocomplete="new-password" required />
-      </label>
-
-      <!-- Выбор аватара (простая заглушка) -->
-      <label>
-        <span data-i18n="avatar">Avatar</span>
-        <select id="regAvatar">
-          <option value="pirate1">Pirate 1</option>
-          <option value="pirate2">Pirate 2</option>
-          <option value="pirate3">Pirate 3</option>
-        </select>
-      </label>
-
-      <button id="btnRegister" class="btn primary" data-i18n="register_btn">Sign Up</button>
-      <div class="links">
-        <a href="#" id="toLoginFromReg" data-i18n="back_login">Back to Sign In</a>
-      </div>
-    </section>
-
-    <!-- Forgot Password -->
-    <section id="view-forgot" class="view hidden">
-      <h1 data-i18n="forgot_title">Reset password</h1>
-      <label>
-        <span data-i18n="email">Email</span>
-        <input id="forgotEmail" type="email" autocomplete="email" required />
-      </label>
-      <button id="btnForgot" class="btn primary" data-i18n="forgot_btn">Send reset link</button>
-      <div class="links">
-        <a href="#" id="toLoginFromForgot" data-i18n="back_login">Back to Sign In</a>
-      </div>
-    </section>
-
-    <!-- Лобби (появляется после входа) -->
-    <section id="view-lobby" class="view hidden">
-      <header class="lobby-header">
-        <div>
-          <div class="avatar" id="userAvatar">👤</div>
-          <div class="nick" id="userNick">Player</div>
-          <div class="rating" id="userRating">1000</div>
-        </div>
-        <button id="btnLogout" class="btn" data-i18n="logout">Logout</button>
-      </header>
-
-      <h2 data-i18n="lobby_title">Lobby</h2>
-
-      <div class="lobby-actions">
-        <button class="btn" id="btnCreateTable" data-i18n="create_table">Create duel</button>
-
-        <label class="grid-label">
-          <span data-i18n="difficulty">Difficulty</span>
-          <select id="gridSelect">
-            <option value="4x3" data-i18n="grid_easy">Easy — 4x3</option>
-            <option value="4x4" data-i18n="grid_mid">Medium — 4x4</option>
-            <option value="4x6" data-i18n="grid_hard">Hard — 4x6</option>
-          </select>
-        </label>
-      </div>
-
-      <div class="lists">
-        <div class="list">
-          <h3 data-i18n="tables">Active duels</h3>
-          <ul id="tablesList" class="card-list"></ul>
-        </div>
-        <div class="list">
-          <h3 data-i18n="players">Online players</h3>
-          <ul id="playersList" class="card-list"></ul>
-        </div>
-      </div>
+      <button id="btnLogin" class="btn" data-i18n="login_btn">Sign In</button>
+      <p><a href="#" id="forgotPassword" data-i18n="forgot">Forgot password?</a></p>
+      <p><a href="#" id="createAccount" data-i18n="create">Create account</a></p>
     </section>
   </main>
+
+  <!-- Language Switch -->
+  <select id="langSelect">
+    <option value="en">EN</option>
+    <option value="ru">РУС</option>
+    <option value="es">ES</option>
+  </select>
 
   <script type="module" src="main.js"></script>
 </body>
