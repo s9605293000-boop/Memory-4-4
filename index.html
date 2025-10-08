@@ -1,15 +1,33 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="utf-8" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
   <title>Memory Duel v4-4</title>
-  <link rel="stylesheet" href="styles.css">
+
   <link rel="manifest" href="manifest.webmanifest">
+  <meta name="theme-color" content="#e7f0f7">
+  <link rel="icon" href="assets/icons/icon-192.png">
+
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <!-- Age Gate -->
-  <div id="ageGate" class="modal show">
+  <header class="topbar">
+    <div class="brand">Memory Duel <span class="v">v4-4</span></div>
+
+    <div class="actions">
+      <select id="langSelect" aria-label="Language">
+        <option value="en">EN</option>
+        <option value="ru">RU</option>
+        <option value="es">ES</option>
+      </select>
+    </div>
+  </header>
+
+  <!-- Age Gate 18+ -->
+  <div id="ageGate" class="modal show" role="dialog" aria-modal="true">
     <div class="modal-card">
       <h3 data-i18n="age_title">Age Confirmation</h3>
       <p data-i18n="age_text">You must be 18+ to play. Confirm to continue.</p>
@@ -17,31 +35,119 @@
     </div>
   </div>
 
-  <!-- Auth Views -->
   <main id="app">
+    <!-- LOGIN -->
     <section id="view-login" class="view">
       <h1 data-i18n="login_title">Sign In</h1>
+
       <label>
         <span data-i18n="email">Email</span>
         <input id="loginEmail" type="email" autocomplete="email" required>
       </label>
+
       <label>
         <span data-i18n="password">Password</span>
-        <input id="loginPassword" type="password" autocomplete="current-password" required>
+        <input id="loginPass" type="password" autocomplete="current-password" required>
       </label>
-      <button id="btnLogin" class="btn" data-i18n="login_btn">Sign In</button>
-      <p><a href="#" id="forgotPassword" data-i18n="forgot">Forgot password?</a></p>
-      <p><a href="#" id="createAccount" data-i18n="create">Create account</a></p>
+
+      <button id="btnLogin" class="btn primary" data-i18n="btn_signin">Sign In</button>
+
+      <div class="row-links">
+        <a id="toRegister" href="#" data-i18n="link_create">Create account</a>
+        <a id="toForgot" href="#" data-i18n="link_forgot">Forgot password?</a>
+      </div>
+    </section>
+
+    <!-- REGISTER -->
+    <section id="view-register" class="view hidden">
+      <h1 data-i18n="reg_title">Create account</h1>
+
+      <label>
+        <span data-i18n="email">Email</span>
+        <input id="regEmail" type="email" autocomplete="email" required>
+      </label>
+
+      <label>
+        <span data-i18n="password">Password</span>
+        <input id="regPass" type="password" autocomplete="new-password" required>
+      </label>
+
+      <div class="avatars" id="avatarGrid" aria-label="Choose avatar">
+        <!-- 6 аватарок по умолчанию -->
+        <img src="assets/avatars/1.png" class="avatar clickable" data-id="1" alt="avatar 1">
+        <img src="assets/avatars/2.png" class="avatar clickable" data-id="2" alt="avatar 2">
+        <img src="assets/avatars/3.png" class="avatar clickable" data-id="3" alt="avatar 3">
+        <img src="assets/avatars/4.png" class="avatar clickable" data-id="4" alt="avatar 4">
+        <img src="assets/avatars/5.png" class="avatar clickable" data-id="5" alt="avatar 5">
+        <img src="assets/avatars/6.png" class="avatar clickable" data-id="6" alt="avatar 6">
+      </div>
+
+      <button id="btnRegister" class="btn primary" data-i18n="btn_register">Register</button>
+      <button id="backToLogin" class="btn ghost" data-i18n="btn_back_login">Back to Sign In</button>
+    </section>
+
+    <!-- FORGOT -->
+    <section id="view-forgot" class="view hidden">
+      <h1 data-i18n="forgot_title">Reset password</h1>
+
+      <label>
+        <span data-i18n="email">Email</span>
+        <input id="forgotEmail" type="email" autocomplete="email" required>
+      </label>
+
+      <button id="btnForgot" class="btn primary" data-i18n="btn_reset">Send reset link</button>
+      <button id="backLogin2" class="btn ghost" data-i18n="btn_back_login">Back to Sign In</button>
+    </section>
+
+    <!-- LOBBY -->
+    <section id="view-lobby" class="view hidden">
+      <div class="userbar">
+        <div class="user">
+          <img id="uiAvatar" class="avatar" src="assets/avatars/default.png" alt="avatar">
+          <div class="meta">
+            <div id="uiEmail">user</div>
+            <div class="rating"><span data-i18n="rating">Rating</span>: <b id="uiRating">1000</b></div>
+          </div>
+        </div>
+        <button id="btnLogout" class="btn ghost" data-i18n="btn_logout">Log out</button>
+      </div>
+
+      <h2 data-i18n="lobby_title">Lobby</h2>
+
+      <div class="card">
+        <h3 data-i18n="new_table">Create new table</h3>
+        <div class="grid-3">
+          <button class="btn size" data-size="4x3">4×3</button>
+          <button class="btn size" data-size="4x4">4×4</button>
+          <button class="btn size" data-size="4x6">4×6</button>
+        </div>
+        <p class="note" data-i18n="solo_note">
+          Single-player for now. Rating isn’t updated in solo.
+        </p>
+      </div>
+    </section>
+
+    <!-- GAME -->
+    <section id="view-game" class="view hidden">
+      <div class="game-top">
+        <button id="btnBackLobby" class="btn ghost" data-i18n="btn_back_lobby">Back to Lobby</button>
+        <div class="timer" id="turnTimer">5</div>
+      </div>
+
+      <div id="board" class="board"></div>
+
+      <div class="scorebar">
+        <div>
+          <span data-i18n="you">You</span> — <b id="youScore">0</b>
+        </div>
+        <div>
+          <span data-i18n="pairs">Pairs</span>: <b id="pairsLeft">0</b>
+        </div>
+      </div>
     </section>
   </main>
 
-  <!-- Language Switch -->
-  <select id="langSelect">
-    <option value="en">EN</option>
-    <option value="ru">РУС</option>
-    <option value="es">ES</option>
-  </select>
-
+  <script type="module" src="lang.js"></script>
   <script type="module" src="main.js"></script>
 </body>
 </html>
