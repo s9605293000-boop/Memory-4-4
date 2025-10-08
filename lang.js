@@ -19,13 +19,17 @@ export const dict = {
     btn_reset:"Send reset link",
 
     lobby_title:"Lobby",
-    new_table:"Create new table",
-    solo_note:"Single-player for now. Rating isn’t updated in solo.",
+    create_duel:"Create Duel",
+    solo_mode:"Solo Mode",
+    refresh:"Refresh",
+    tables:"Active duels",
+    players:"Online players",
+    rating:"Rating",
     btn_logout:"Log out",
     btn_back_lobby:"Back to Lobby",
     you:"You",
-    pairs:"Pairs",
-    rating:"Rating"
+    opponent:"Opponent",
+    pairs:"Pairs"
   },
   ru:{
     age_title:"Подтверждение возраста",
@@ -47,13 +51,17 @@ export const dict = {
     btn_reset:"Отправить ссылку",
 
     lobby_title:"Лобби",
-    new_table:"Создать стол",
-    solo_note:"Пока только одиночная игра. Рейтинг не изменяется.",
+    create_duel:"Создать дуэль",
+    solo_mode:"Одиночная игра",
+    refresh:"Обновить",
+    tables:"Активные столы",
+    players:"Игроки онлайн",
+    rating:"Рейтинг",
     btn_logout:"Выйти",
     btn_back_lobby:"В лобби",
     you:"Вы",
-    pairs:"Пары",
-    rating:"Рейтинг"
+    opponent:"Соперник",
+    pairs:"Пары"
   },
   es:{
     age_title:"Confirmación de edad",
@@ -75,13 +83,17 @@ export const dict = {
     btn_reset:"Enviar enlace",
 
     lobby_title:"Lobby",
-    new_table:"Crear mesa nueva",
-    solo_note:"Por ahora es modo solitario. El rating no cambia.",
+    create_duel:"Crear duelo",
+    solo_mode:"Modo solitario",
+    refresh:"Actualizar",
+    tables:"Duelos activos",
+    players:"Jugadores en línea",
+    rating:"Rating",
     btn_logout:"Salir",
     btn_back_lobby:"Volver al Lobby",
     you:"Tú",
-    pairs:"Pares",
-    rating:"Rating"
+    opponent:"Oponente",
+    pairs:"Pares"
   }
 };
 
