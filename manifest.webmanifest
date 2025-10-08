@@ -1,26 +1,12 @@
 {
-  "name": "Memory Duel",
+  "name": "Memory Duel v4-4",
   "short_name": "MemoryDuel",
-  "start_url": ".",
+  "start_url": "/",
   "display": "standalone",
-  "background_color": "#f0f4f8",
-  "theme_color": "#4a90e2",
+  "background_color": "#f5f8fb",
+  "theme_color": "#e7f0f7",
   "icons": [
-    {
-      "src": "icons/icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png"
-    },
-    {
-      "src": "icons/icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png"
-    },
-    {
-      "src": "icons/maskable-icon.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "maskable"
-    }
+    { "src": "assets/icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "assets/icons/icon-512.png", "sizes": "512x512", "type": "image/png" }
   ]
 }
