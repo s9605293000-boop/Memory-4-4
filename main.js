@@ -1,364 +1,351 @@
-import { applyLang } from './lang.js';
-
-// --------- Firebase (CDN modular v10) ----------
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-app.js";
-import {
-  getAuth, onAuthStateChanged, createUserWithEmailAndPassword,
-  signInWithEmailAndPassword, sendPasswordResetEmail, updateProfile, signOut
-} from "https://www.gstatic.com/firebasejs/10.12.4/firebase-auth.js";
-import {
-  getFirestore, collection, doc, setDoc, getDoc, getDocs, onSnapshot,
-  updateDoc, addDoc, deleteDoc, serverTimestamp, query, where
-} from "https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore.js";
-import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-analytics.js";
-
-// ---- Твои ключи (как прислал) ----
-const firebaseConfig = {
-  apiKey: "AIzaSyCIaYXC8SjGbQeeqHr7avZKiJO_mPwQl_A",
-  authDomain: "memory-4-4.firebaseapp.com",
-  projectId: "memory-4-4",
-  storageBucket: "memory-4-4.firebasestorage.app",
-  messagingSenderId: "650806889779",
-  appId: "1:650806889779:web:0233412262142c01a40246",
-  measurementId: "G-KZ9S0B51WG"
+// Firebase init
+var firebaseConfig={
+  apiKey:"AIzaSyCIaYXC8SjGbQeeqHr7avZKiJO_mPwQl_A",
+  authDomain:"memory-4-4.firebaseapp.com",
+  projectId:"memory-4-4",
+  storageBucket:"memory-4-4.firebasestorage.app",
+  messagingSenderId:"650806889779",
+  appId:"1:650806889779:web:0233412262142c01a40246",
+  measurementId:"G-KZ9S0B51WG"
 };
+firebase.initializeApp(firebaseConfig);
+const auth=firebase.auth();
+const db=firebase.firestore();
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-try { getAnalytics(app); } catch(_) { /* analytics unavailable on http */ }
+// PWA
+if('serviceWorker'in navigator){ navigator.serviceWorker.register('./service-worker.js'); }
 
-// --------- Helpers ----------
-const $  = s => document.querySelector(s);
-const $$ = s => Array.from(document.querySelectorAll(s));
-const show = id => { $$('.view').forEach(v=>v.classList.add('hidden')); $(id).classList.remove('hidden'); };
-const toast = m => alert(m);
+// Helpers
+const qs=s=>document.querySelector(s);
+const qsa=s=>Array.from(document.querySelectorAll(s));
+function show(id){ qsa('.card').forEach(c=>c.classList.add('hidden')); qs(id).classList.remove('hidden'); }
 
-// --------- Age Gate ----------
-(function initAgeGate(){
-  const gate = $('#ageGate');
-  if (localStorage.getItem('age_ok') === '1') return gate.classList.remove('show');
-  $('#ageConfirm').addEventListener('click', ()=>{
-    localStorage.setItem('age_ok','1');
-    gate.classList.remove('show');
-  });
-})();
+// Tabs
+qs('#tab-login').addEventListener('click',()=>{
+  qs('#tab-login').classList.add('active');
+  qs('#tab-register').classList.remove('active');
+  qs('#login-form').classList.remove('hidden');
+  qs('#register-form').classList.add('hidden');
+});
+qs('#tab-register').addEventListener('click',()=>{
+  qs('#tab-register').classList.add('active');
+  qs('#tab-login').classList.remove('active');
+  qs('#register-form').classList.remove('hidden');
+  qs('#login-form').classList.add('hidden');
+});
+qsa('.avatar.pick').forEach(img=>img.addEventListener('click',()=>{
+  qsa('.avatar.pick').forEach(i=>i.classList.remove('active'));
+  img.classList.add('active');
+}));
 
-// --------- Language ----------
-const langSelect = $('#langSelect');
-function setLang(l){ applyLang(l); langSelect.value = l; }
-langSelect.addEventListener('change', e => setLang(e.target.value));
-setLang(localStorage.getItem('lang') || 'en');
-
-// --------- View nav ----------
-$('#toRegister').addEventListener('click', e=>{ e.preventDefault(); show('#view-register'); });
-$('#backToLogin').addEventListener('click', e=>{ e.preventDefault(); show('#view-login'); });
-$('#toForgot').addEventListener('click', e=>{ e.preventDefault(); show('#view-forgot'); });
-$('#backLogin2').addEventListener('click', e=>{ e.preventDefault(); show('#view-login'); });
-
-// --------- Auth ----------
-let chosenAvatar = '1';
-$('#avatarGrid').addEventListener('click', e=>{
-  if (e.target.matches('.avatar')) {
-    $$('#avatarGrid .avatar').forEach(a=>a.classList.remove('selected'));
-    e.target.classList.add('selected');
-    chosenAvatar = e.target.dataset.id;
-  }
+// Auth
+qs('#btn-forgot').addEventListener('click',async()=>{
+  const email=qs('#login-email').value.trim();
+  if(!email){return qs('#auth-error').textContent='Email required';}
+  try{ await auth.sendPasswordResetEmail(email); qs('#auth-error').textContent='Email sent'; }
+  catch(e){ qs('#auth-error').textContent=e.message; }
 });
 
-$('#btnRegister').addEventListener('click', async ()=>{
-  const email = $('#regEmail').value.trim();
-  const pass  = $('#regPass').value;
-  if (!email || !pass) return toast('Fill all fields');
+qs('#btn-register').addEventListener('click',async()=>{
+  const email=qs('#reg-email').value.trim();
+  const pass=qs('#reg-password').value;
+  const nick=qs('#reg-nickname').value.trim();
+  const avatar=qs('.avatar.pick.active').dataset.avatar;
+  const err=qs('#register-error'); err.textContent='';
+  if(!email||!pass||!nick){err.textContent='Fill all fields';return;}
+  if(pass.length<6){err.textContent='Password 6+';return;}
+  if(nick.length<3||nick.length>16){err.textContent='Nickname 3–16';return;}
+  const exists=await db.collection('profiles').where('nickname','==',nick).get();
+  if(!exists.empty){err.textContent='Nickname taken';return;}
   try{
-    const cred = await createUserWithEmailAndPassword(auth, email, pass);
-    await updateProfile(cred.user, {
-      displayName: email.split('@')[0],
-      photoURL: `assets/avatars/${chosenAvatar}.png`
+    const cred=await auth.createUserWithEmailAndPassword(email,pass);
+    await db.collection('profiles').doc(cred.user.uid).set({
+      nickname:nick,rating:1000,avatar:'assets/avatars/'+avatar,coins:10,
+      status:'free',updated:firebase.firestore.FieldValue.serverTimestamp()
     });
-    // стартовый рейтинг в Firestore
-    await setDoc(doc(db, 'profiles', cred.user.uid), {
-      email, rating: 1000, avatar: chosenAvatar, createdAt: serverTimestamp()
+  }catch(e){ err.textContent=e.message; }
+});
+
+qs('#btn-login').addEventListener('click',async()=>{
+  const email=qs('#login-email').value.trim();
+  const password=qs('#login-password').value;
+  try{ await auth.signInWithEmailAndPassword(email,password); }
+  catch(e){ qs('#auth-error').textContent=e.message; }
+});
+
+qs('#btn-logout').addEventListener('click',()=>auth.signOut());
+
+auth.onAuthStateChanged(async(user)=>{
+  if(!user){ show('#auth-screen'); return; }
+  const pdoc=db.collection('profiles').doc(user.uid);
+  const p=await pdoc.get();
+  if(!p.exists){
+    await pdoc.set({nickname:'Player',rating:1000,avatar:'assets/avatars/pirate_avatar_1.jpg',coins:10,status:'free',updated:firebase.firestore.FieldValue.serverTimestamp()});
+  }
+  const prof=(await pdoc.get()).data();
+  qs('#profile-avatar').src=prof.avatar;
+  qs('#profile-name').textContent=prof.nickname;
+  qs('#rating-badge').textContent=prof.rating;
+  setPresence('free');
+  show('#lobby');
+  subscribeOnlineList();
+});
+
+// Presence
+let presenceUnsub=null;
+function setPresence(state){
+  const user=auth.currentUser; if(!user) return;
+  db.collection('profiles').doc(user.uid).update({status:state,updated:firebase.firestore.FieldValue.serverTimestamp()});
+  const l=localStorage.getItem('lang')||'en';
+  qs('#presence-badge').textContent=(state==='free'?LANGS[l].free:(state==='in'?LANGS[l].in_game:LANGS[l].offline));
+}
+function subscribeOnlineList(){
+  if(presenceUnsub) presenceUnsub();
+  presenceUnsub=db.collection('profiles').where('status','in',['free','in']).onSnapshot(snap=>{
+    const ul=qs('#online-list'); ul.innerHTML='';
+    snap.forEach(doc=>{
+      if(doc.id===auth.currentUser.uid) return;
+      const d=doc.data();
+      const li=document.createElement('li');
+      li.innerHTML=`<div style="display:flex;align-items:center;gap:8px">
+        <img src="${d.avatar}" class="avatar">
+        <div><div>${d.nickname}</div><div class="badge">${d.rating}</div></div>
+      </div><button class="invite" data-uid="${doc.id}">Invite</button>`;
+      ul.appendChild(li);
     });
-    toast('Account created');
-  }catch(err){ toast('Register error: '+err.message); }
-});
-
-$('#btnLogin').addEventListener('click', async ()=>{
-  const email = $('#loginEmail').value.trim();
-  const pass  = $('#loginPass').value;
-  if (!email || !pass) return toast('Fill all fields');
-  try{
-    await signInWithEmailAndPassword(auth, email, pass);
-  }catch(err){ toast('Login error: '+err.message); }
-});
-
-$('#btnForgot').addEventListener('click', async ()=>{
-  const email = $('#forgotEmail').value.trim();
-  if (!email) return toast('Enter email');
-  try{
-    await sendPasswordResetEmail(auth, email);
-    toast('Reset link sent');
-  }catch(err){ toast('Reset error: '+err.message); }
-});
-
-$('#btnLogout').addEventListener('click', ()=> signOut(auth));
-
-// --------- Auth state → lobby ----------
-let currentUser = null;
-onAuthStateChanged(auth, async (user)=>{
-  currentUser = user || null;
-  if (user){
-    const pr = await getDoc(doc(db, 'profiles', user.uid));
-    const rating = pr.exists() ? (pr.data().rating ?? 1000) : 1000;
-    $('#uiEmail').textContent = user.email;
-    $('#uiRating').textContent = rating;
-    $('#uiAvatar').src = user.photoURL || 'assets/avatars/1.png';
-    show('#view-lobby');
-    refreshTables();
-  }else{
-    show('#view-login');
-  }
-});
-
-// --------- Lobby: tables (Firestore) ----------
-const tablesCol = collection(db, 'tables');
-let grid = '4x3';
-
-$$('.btn.size').forEach(btn=>{
-  btn.addEventListener('click', ()=>{
-    grid = btn.dataset.size;
-  });
-});
-
-$('#btnRefreshTables').addEventListener('click', refreshTables);
-async function refreshTables(){
-  const list = $('#tablesList');
-  list.innerHTML = '';
-  const snap = await getDocs(tablesCol);
-  snap.forEach(d=>{
-    const t = d.data();
-    const li = document.createElement('li');
-    li.innerHTML = `
-      <div>
-        <b>${t.name}</b> • ${t.grid} • ${t.status}
-        <div class="sub">${(t.ownerEmail||'').split('@')[0]}</div>
-      </div>
-      <div>
-        ${t.status==='open' ? `<button class="btn join" data-id="${d.id}">Join</button>` : ''}
-        ${currentUser && t.owner===currentUser.uid ? `<button class="btn ghost del" data-id="${d.id}">Delete</button>` : ''}
-      </div>
-    `;
-    list.appendChild(li);
-  });
-
-  // attach actions
-  $$('#tablesList .btn.join').forEach(b=>b.addEventListener('click', ()=> joinTable(b.dataset.id)));
-  $$('#tablesList .btn.del').forEach(b=>b.addEventListener('click',  ()=> deleteTable(b.dataset.id)));
-}
-
-$('#btnCreateDuel').addEventListener('click', async ()=>{
-  if (!currentUser) return toast('Sign in first');
-  const name = `Table ${Math.random().toString(36).slice(2,7)}`;
-  const board = buildDeck(grid); // shuffled fronts
-  const ref = await addDoc(tablesCol, {
-    name, grid, owner: currentUser.uid, ownerEmail: currentUser.email,
-    status: 'open',
-    createdAt: serverTimestamp(),
-    players: [{uid: currentUser.uid, score:0}],
-    board, opened: [], removed: [],
-    turn: currentUser.uid, turnEndsAt: Date.now() + 5000
-  });
-  toast('Duel created');
-  refreshTables();
-});
-
-async function deleteTable(id){
-  await deleteDoc(doc(db,'tables',id));
-  refreshTables();
-}
-
-async function joinTable(id){
-  if (!currentUser) return toast('Sign in first');
-  const ref = doc(db,'tables',id);
-  const snap = await getDoc(ref);
-  if (!snap.exists()) return toast('Table not found');
-  const t = snap.data();
-  if (t.players?.length>=2) return toast('Table is full');
-  await updateDoc(ref, {
-    status: 'playing',
-    players: t.players.concat([{uid: currentUser.uid, score:0}]),
-    turn: t.turn ?? currentUser.uid,
-    turnEndsAt: Date.now() + 5000
-  });
-  openGame(id, true); // duel mode
-}
-
-// --------- Game (solo & duel) ----------
-const boardEl = $('#board');
-const youScoreEl = $('#youScore');
-const oppScoreEl = $('#oppScore');
-const pairsLeftEl = $('#pairsLeft');
-const turnTimerEl = $('#turnTimer');
-$('#btnSolo').addEventListener('click', ()=> { openGame(null,false); });
-
-$('#btnBackLobby').addEventListener('click', ()=>{
-  show('#view-lobby');
-  stopTick();
-  if (unsubGame) unsubGame();
-});
-
-const CARD_BACK = 'assets/cards/question.png'; // единый бэк
-function buildDeck(size){
-  const [cols,rows] = size.split('x').map(Number);
-  const total = cols*rows; const pairs = total/2;
-  // используем пиратские фронты 1..12 (расширяй при желании)
-  const ids = Array.from({length:pairs},(_,i)=> (i%12)+1);
-  const fronts = ids.flatMap(id => [`assets/cards/${id}.png`,`assets/cards/${id}.png`]);
-  // shuffle
-  for(let i=fronts.length-1;i>0;i--){
-    const j = Math.floor(Math.random()*(i+1));
-    [fronts[i],fronts[j]]=[fronts[j],fronts[i]];
-  }
-  return fronts;
-}
-
-let opened = [];
-let locked = false;
-let tickId = null;
-function stopTick(){ clearInterval(tickId); }
-
-function renderBoardFrom(fronts, removedSet){
-  boardEl.innerHTML = '';
-  const [cols] = grid.split('x').map(Number);
-  boardEl.style.gridTemplateColumns = `repeat(${cols},1fr)`;
-  fronts.forEach((frontSrc, idx)=>{
-    const img = document.createElement('img');
-    img.dataset.idx = idx;
-    img.dataset.front = frontSrc;
-    img.src = removedSet?.has(idx) ? frontSrc : CARD_BACK;
-    img.style.visibility = removedSet?.has(idx) ? 'hidden' : 'visible';
-    img.addEventListener('click', onCardClick, {passive:true});
-    boardEl.appendChild(img);
   });
 }
 
-function onCardClick(e){
-  if (locked) return;
-  const img = e.currentTarget;
-  const idx = Number(img.dataset.idx);
-  if (img.style.visibility==='hidden') return;
-  if (opened.includes(idx)) return;
+// Modes
+qs('#solo-mode').addEventListener('click',()=>{
+  qs('#duel-panel').classList.add('hidden');
+  qs('#level-select').classList.remove('hidden');
+  qs('#level-select').dataset.mode='solo';
+});
+qs('#duel-mode').addEventListener('click',()=>{
+  qs('#duel-panel').classList.remove('hidden');
+  qs('#level-select').classList.remove('hidden');
+  qs('#level-select').dataset.mode='duel';
+});
+qsa('.level').forEach(btn=>btn.addEventListener('click',()=>{
+  const lvl=btn.dataset.level;
+  const mode=qs('#level-select').dataset.mode||'solo';
+  if(mode==='solo'){ startSolo(lvl); }
+  else{ prepareDuel(lvl); }
+}));
 
-  img.src = img.dataset.front;
-  opened.push(idx);
-
-  if (opened.length===2){
-    locked = true;
-    const [a,b] = opened.map(i => boardEl.querySelector(`img[data-idx="${i}"]`));
-    const same = a.dataset.front === b.dataset.front;
-
-    setTimeout(async ()=>{
-      if (same){
-        a.style.visibility = b.style.visibility = 'hidden';
-        youScoreEl.textContent = String(Number(youScoreEl.textContent)+1);
-        pairsLeftEl.textContent = String(Math.max(0, Number(pairsLeftEl.textContent)-1));
-        if (currentGame && currentGame.duel) {
-          await updateDoc(doc(db,'tables', currentGame.id), {
-            removed: (currentGame.removed||[]).concat(opened),
-          });
-        }
-      }else{
-        a.src = CARD_BACK; b.src = CARD_BACK;
-      }
-      opened = [];
-      locked = false;
-    }, 500);
-  }
-}
-
-let currentGame = null;
-let unsubGame = null;
-
-async function openGame(tableId, duel){
-  // init state
-  opened = []; locked = false;
-  youScoreEl.textContent = '0'; oppScoreEl.textContent = '0';
-  $('#opponentWrap').style.display = duel ? 'block' : 'none';
-
-  if (!duel){
-    // SOLO
-    const size = grid;
-    const fronts = buildDeck(size);
-    const pairs = fronts.length/2;
-    pairsLeftEl.textContent = String(pairs);
-    renderBoardFrom(fronts, new Set());
-    show('#view-game');
-    startTurnTimer();
-    currentGame = {duel:false, fronts};
-    return;
-  }
-
-  // DUEL (Firestore)
-  const ref = doc(db,'tables',tableId);
-  const snap = await getDoc(ref);
-  if (!snap.exists()) return toast('Table not found');
-  const t = snap.data();
-  grid = t.grid; // align with table
-  const pairs = t.board.length/2;
-  pairsLeftEl.textContent = String(pairs);
-  currentGame = {duel:true, id: tableId, board: t.board, removed: new Set(t.removed||[])};
-  renderBoardFrom(t.board, currentGame.removed);
-  show('#view-game');
-  startTurnTimer(t.turnEndsAt);
-
-  if (unsubGame) unsubGame();
-  unsubGame = onSnapshot(ref, s=>{
-    if (!s.exists()) return;
-    const d = s.data();
-    // update removed
-    currentGame.removed = new Set(d.removed||[]);
-    // re-render visibilities only (cheap)
-    $$('#board img').forEach(img=>{
-      const idx = Number(img.dataset.idx);
-      img.style.visibility = currentGame.removed.has(idx) ? 'hidden' : 'visible';
-      if (!currentGame.removed.has(idx) && !opened.includes(idx)) img.src = CARD_BACK;
+// Invites
+document.addEventListener('click',async(e)=>{
+  const iv=e.target.closest('.invite');
+  if(!iv) return;
+  const to=iv.dataset.uid;
+  const user=auth.currentUser;
+  const inv=await db.collection('invites').add({
+    from:user.uid,to,created:firebase.firestore.FieldValue.serverTimestamp(),ttl:Date.now()+60000
+  });
+  qs('#invite-info').textContent=LANGS[localStorage.getItem('lang')||'en'].invite_sent;
+  const unsub=db.collection('rooms').where('invite','==',inv.id).onSnapshot(s=>{
+    s.forEach(doc=>{ if(doc.exists){ unsub(); joinRoom(doc.id); } });
+  });
+  setTimeout(()=>inv.delete(),60000);
+});
+auth.onAuthStateChanged(user=>{
+  if(!user) return;
+  db.collection('invites').where('to','==',user.uid).onSnapshot(snap=>{
+    snap.docChanges().forEach(ch=>{
+      if(ch.type!=='added') return;
+      const inv=ch.doc.data();
+      const wrap=document.createElement('div');
+      wrap.className='card';
+      wrap.innerHTML=`<b>${LANGS[localStorage.getItem('lang')||'en'].invited_you}</b>
+        <div style="display:flex;gap:8px;margin-top:6px">
+          <button class="primary" id="acc-${ch.doc.id}">${LANGS[localStorage.getItem('lang')||'en'].accept}</button>
+          <button class="secondary" id="dec-${ch.doc.id}">${LANGS[localStorage.getItem('lang')||'en'].decline}</button>
+        </div>`;
+      qs('#lobby').appendChild(wrap);
+      wrap.querySelector('#acc-'+ch.doc.id).onclick=async()=>{
+        const level=qs('#level-select').dataset.level||'easy';
+        const room=await db.collection('rooms').add({
+          invite:ch.doc.id,players:[inv.from,inv.to],created:firebase.firestore.FieldValue.serverTimestamp(),
+          level,turn:inv.from,state:buildDeck(level),open:[],banks:{[inv.from]:0,[inv.to]:0},timer:5,lastMove:Date.now(),finished:false
+        });
+        joinRoom(room.id);
+      };
+      wrap.querySelector('#dec-'+ch.doc.id).onclick=()=>ch.doc.ref.delete();
+      if(inv.ttl&&Date.now()>inv.ttl){ ch.doc.ref.delete(); }
     });
-    // scores (на лету считаем)
-    const myIdxs  = Array.from(currentGame.removed).filter((_,i)=>true).length/2; // грубо, локально
-    oppScoreEl.textContent = String(Math.max(0, (d.removed?.length||0)/2 - Number(youScoreEl.textContent)));
-    pairsLeftEl.textContent = String(Math.max(0, d.board.length/2 - (d.removed?.length||0)/2));
   });
+});
+
+function prepareDuel(level){
+  qs('#level-select').dataset.level=level;
+  qs('#invite-info').textContent='Invite a player to start (60s).';
 }
 
-// --------- 5s turn timer (UI only; для полной честности таймер можно хранить в Firestore) ----------
-function startTurnTimer(turnEndsAt){
-  stopTick();
-  let t = 5;
-  if (turnEndsAt){
-    const dt = Math.floor((turnEndsAt - Date.now())/1000);
-    if (dt>0) t = dt;
-  }
-  turnTimerEl.textContent = String(t);
-  tickId = setInterval(()=>{
-    t--; turnTimerEl.textContent = String(Math.max(0,t));
-    if (t<=0){
-      stopTick();
-      // в solo просто переворачиваем одиночную открытую карту
-      if (!currentGame?.duel && opened.length===1){
-        const only = boardEl.querySelector(`img[data-idx="${opened[0]}"]`);
-        if (only) only.src = CARD_BACK;
-        opened=[];
-      }
-      // перезапустим заново
-      startTurnTimer();
+// Board/logic
+let currentRoom=null; let soloState=null;
+function gridFor(level){ if(level==='easy')return[4,3,6]; if(level==='medium')return[4,4,8]; return[6,4,12]; }
+function buildDeck(level){
+  const[, ,pairs]=gridFor(level);
+  const all=[...Array(12)].map((_,i)=>`assets/cards/pirate_${String(i+1).padStart(2,'0')}.png`);
+  const chosen=shuffle(all).slice(0,pairs);
+  const deck=shuffle([...chosen,...chosen]).map((src,idx)=>({id:idx,img:src,open:false,matched:false}));
+  return deck;
+}
+function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]] } return a; }
+
+function startSolo(level){
+  setPresence('in');
+  soloState={level,deck:buildDeck(level),open:[],bank:0};
+  currentRoom=null;
+  renderBoard(soloState.deck,level);
+  qs('#bank-p1 span').textContent=soloState.bank;
+  qs('#bank-p2 span').textContent='0';
+  qs('#game-info').textContent='Solo';
+  qs('#turn-timer').textContent='';
+  show('#game-screen');
+}
+
+async function joinRoom(roomId){
+  currentRoom=roomId;
+  setPresence('in');
+  const roomRef=db.collection('rooms').doc(roomId);
+  roomRef.onSnapshot(snap=>{
+    const r=snap.data();
+    renderBoard(r.state,r.level,r.turn);
+    const my=auth.currentUser.uid;
+    qs('#bank-p1 span').textContent=r.banks[my]||0;
+    const opp=r.players.find(x=>x!==my);
+    qs('#bank-p2 span').textContent=r.banks[opp]||0;
+    qs('#turn-timer').textContent=Math.max(0,5-Math.floor((Date.now()-r.lastMove)/1000));
+    const l=localStorage.getItem('lang')||'en';
+    qs('#game-info').textContent=(r.turn===my?LANGS[l].you:LANGS[l].opponent)+' - '+LANGS[l].turn;
+    if(r.finished){ endDuel(r); }
+  });
+  show('#game-screen');
+}
+
+document.addEventListener('click',async(e)=>{
+  const tile=e.target.closest('.card-tile');
+  if(!tile) return;
+  const idx=parseInt(tile.dataset.idx);
+  if(currentRoom){
+    const my=auth.currentUser.uid;
+    const roomRef=db.collection('rooms').doc(currentRoom);
+    const r=(await roomRef.get()).data();
+    if(r.turn!==my) return;
+    const now=Date.now();
+    if(now-r.lastMove>5000){
+      await roomRef.update({turn:r.players.find(x=>x!==my),lastMove:now,open:[]});
+      return;
     }
-  },1000);
+    if(r.state[idx].matched||r.open.includes(idx)) return;
+    r.state[idx].open=true; r.open.push(idx);
+    if(r.open.length===2){
+      const[a,b]=r.open;
+      if(r.state[a].img===r.state[b].img){
+        r.state[a].matched=r.state[b].matched=true;
+        r.banks[my]=(r.banks[my]||0)+1; r.open=[];
+      }else{
+        const opp=r.players.find(x=>x!==my);
+        setTimeout(async()=>{
+          const fresh=(await roomRef.get()).data();
+          fresh.state[a].open=false; fresh.state[b].open=false;
+          fresh.turn=opp; fresh.lastMove=Date.now(); fresh.open=[];
+          await roomRef.set(fresh);
+        },600);
+      }
+    }
+    const finished=r.state.every(c=>c.matched);
+    if(finished) r.finished=true;
+    r.lastMove=now;
+    await roomRef.set(r);
+  }else if(soloState){
+    const st=soloState;
+    const c=st.deck[idx];
+    if(c.matched||st.open.includes(idx)) return;
+    c.open=true; st.open.push(idx);
+    if(st.open.length===2){
+      const[a,b]=st.open;
+      if(st.deck[a].img===st.deck[b].img){
+        st.deck[a].matched=st.deck[b].matched=true; st.bank++; st.open=[];
+        flyToBank(tile,qs('#bank-p1'));
+      }else{
+        setTimeout(()=>{ st.deck[a].open=st.deck[b].open=false; st.open=[]; renderBoard(st.deck,st.level); },600);
+      }
+    }
+    renderBoard(st.deck,st.level);
+  }
+});
+
+function flyToBank(fromEl,bankEl){
+  const rect=fromEl.getBoundingClientRect();
+  const clone=fromEl.cloneNode(true);
+  clone.classList.add('fly');
+  clone.style.left=rect.left+'px';
+  clone.style.top=rect.top+'px';
+  document.body.appendChild(clone);
+  const b=bankEl.getBoundingClientRect();
+  requestAnimationFrame(()=>{
+    clone.style.transform=`translate(${b.left-rect.left}px, ${b.top-rect.top}px) scale(.2)`;
+    clone.style.opacity='0';
+  });
+  setTimeout(()=>clone.remove(),650);
 }
 
-// --------- PWA: register SW ----------
-if ('serviceWorker' in navigator){
-  window.addEventListener('load', ()=>{
-    navigator.serviceWorker.register('/service-worker.js').catch(()=>{});
+function renderBoard(deck,level){
+  const[cols,rows]=(level==='hard')?[6,4]:(level==='medium'?[4,4]:[4,3]);
+  const board=qs('#board');
+  board.innerHTML='';
+  board.style.gridTemplateColumns=`repeat(${cols},72px)`;
+  board.style.gridTemplateRows=`repeat(${rows},72px)`;
+  deck.forEach((card,idx)=>{
+    const el=document.createElement('div');
+    el.className='card-tile'+(card.open||card.matched?' flipped':'');
+    el.dataset.idx=idx;
+    el.innerHTML=`
+      <img class="card-back" src="assets/cards/back.png">
+      <div class="card-face">
+        <img src="${card.img}" style="width:64px;height:64px"/>
+      </div>`;
+    board.appendChild(el);
   });
+}
+
+qs('#btn-exit-game').addEventListener('click',async()=>{
+  if(currentRoom){
+    const my=auth.currentUser.uid;
+    const roomRef=db.collection('rooms').doc(currentRoom);
+    const r=(await roomRef.get()).data();
+    await updateRatings(my,r.players.find(x=>x!==my),false,true);
+    await roomRef.delete();
+    currentRoom=null;
+  }
+  setPresence('free');
+  show('#lobby');
+});
+
+async function endDuel(r){
+  const my=auth.currentUser.uid;
+  const opp=r.players.find(x=>x!==my);
+  const myScore=r.banks[my]||0;
+  const oppScore=r.banks[opp]||0;
+  await updateRatings(my,opp,myScore>oppScore);
+  db.collection('rooms').doc(currentRoom).delete();
+  currentRoom=null;
+  const l=localStorage.getItem('lang')||'en';
+  alert((myScore>oppScore)?LANGS[l].win:LANGS[l].lose);
+  setPresence('free');
+  show('#lobby');
+}
+async function updateRatings(who,other,didWin,left=false){
+  const p1=db.collection('profiles').doc(who);
+  const p2=db.collection('profiles').doc(other);
+  const A=await p1.get(),B=await p2.get();
+  let r1=A.data().rating,r2=B.data().rating;
+  if(left){ r1-=10; r2+=15; }
+  else if(didWin){ r1+=15; r2-=10; }
+  else{ r1-=10; r2+=15; }
+  await p1.update({rating:r1});
+  await p2.update({rating:r2});
 }
