@@ -1,170 +1,112 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport"
-        content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
-  <title>Memory Duel v4-4</title>
-
-  <!-- PWA -->
-  <link rel="manifest" href="manifest.webmanifest" />
-  <meta name="theme-color" content="#e7f0f7" />
-
-  <link rel="icon" href="assets/icons/icon-192.png" />
-  <link rel="apple-touch-icon" href="assets/icons/icon-192.png" />
-  <link rel="stylesheet" href="styles.css" />
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+<title>Memory Duel</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="assets/icons/icon-192.png">
+<meta name="theme-color" content="#0f3b5c">
+<link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <!-- Top bar: brand + language -->
-  <header class="topbar">
-    <div class="brand">Memory Duel <span class="v">v4-4</span></div>
-    <div class="actions">
-      <select id="langSelect" aria-label="Language">
-        <option value="en">EN</option>
-        <option value="ru">RU</option>
-        <option value="es">ES</option>
-      </select>
+<div id="app">
+  <!-- AUTH -->
+  <div id="auth-screen" class="card">
+    <h1 data-i18n="title">MEMORY DUEL</h1>
+    <div class="lang-switch">
+      <button class="lang-btn" data-lang="en">EN</button>
+      <button class="lang-btn" data-lang="ru">RU</button>
+      <button class="lang-btn" data-lang="es">ES</button>
     </div>
-  </header>
-
-  <!-- Age Gate 18+ -->
-  <div id="ageGate" class="modal show" role="dialog" aria-modal="true">
-    <div class="modal-card">
-      <h3 data-i18n="age_title">Age Confirmation</h3>
-      <p data-i18n="age_text">You must be 18+ to play. Confirm to continue.</p>
-      <button id="ageConfirm" class="btn primary" data-i18n="age_btn">I am 18+</button>
+    <div id="auth-tabs">
+      <button id="tab-login" class="tab active" data-i18n="login_tab">Login</button>
+      <button id="tab-register" class="tab" data-i18n="register_tab">Register</button>
+    </div>
+    <div id="login-form" class="form">
+      <input id="login-email" type="email" placeholder="Email">
+      <input id="login-password" type="password" placeholder="Password">
+      <button id="btn-login" class="primary" data-i18n="login">Login</button>
+      <button id="btn-forgot" class="link" data-i18n="forgot">Forgot password</button>
+      <div id="auth-error" class="error"></div>
+    </div>
+    <div id="register-form" class="form hidden">
+      <input id="reg-email" type="email" placeholder="Email">
+      <input id="reg-password" type="password" placeholder="Password (6+)">
+      <input id="reg-nickname" type="text" placeholder="Nickname (3–16)">
+      <div class="avatar-choose">
+        <img src="assets/avatars/pirate_avatar_1.jpg" class="avatar pick active" data-avatar="pirate_avatar_1.jpg">
+        <img src="assets/avatars/pirate_avatar_2.jpg" class="avatar pick" data-avatar="pirate_avatar_2.jpg">
+        <img src="assets/avatars/pirate_avatar_3.jpg" class="avatar pick" data-avatar="pirate_avatar_3.jpg">
+      </div>
+      <button id="btn-register" class="primary" data-i18n="create">Create account</button>
+      <div id="register-error" class="error"></div>
     </div>
   </div>
 
-  <main id="app">
-    <!-- LOGIN -->
-    <section id="view-login" class="view">
-      <h1 data-i18n="login_title">Sign In</h1>
-
-      <label>
-        <span data-i18n="email">Email</span>
-        <input id="loginEmail" type="email" autocomplete="email" required />
-      </label>
-
-      <label>
-        <span data-i18n="password">Password</span>
-        <input id="loginPass" type="password" autocomplete="current-password" required />
-      </label>
-
-      <button id="btnLogin" class="btn primary" data-i18n="btn_signin">Sign In</button>
-
-      <div class="row-links">
-        <a id="toRegister" href="#" data-i18n="link_create">Create account</a>
-        <a id="toForgot" href="#" data-i18n="link_forgot">Forgot password?</a>
-      </div>
-    </section>
-
-    <!-- REGISTER -->
-    <section id="view-register" class="view hidden">
-      <h1 data-i18n="reg_title">Create account</h1>
-
-      <label>
-        <span data-i18n="email">Email</span>
-        <input id="regEmail" type="email" autocomplete="email" required />
-      </label>
-
-      <label>
-        <span data-i18n="password">Password</span>
-        <input id="regPass" type="password" autocomplete="new-password" required />
-      </label>
-
-      <div class="avatars" id="avatarGrid" aria-label="Choose avatar">
-        <!-- 6 default avatars -->
-        <img src="assets/avatars/1.png" class="avatar clickable selected" data-id="1" alt="avatar 1" />
-        <img src="assets/avatars/2.png" class="avatar clickable" data-id="2" alt="avatar 2" />
-        <img src="assets/avatars/3.png" class="avatar clickable" data-id="3" alt="avatar 3" />
-        <img src="assets/avatars/4.png" class="avatar clickable" data-id="4" alt="avatar 4" />
-        <img src="assets/avatars/5.png" class="avatar clickable" data-id="5" alt="avatar 5" />
-        <img src="assets/avatars/6.png" class="avatar clickable" data-id="6" alt="avatar 6" />
-      </div>
-
-      <button id="btnRegister" class="btn primary" data-i18n="btn_register">Register</button>
-      <button id="backToLogin" class="btn ghost" data-i18n="btn_back_login">Back to Sign In</button>
-    </section>
-
-    <!-- FORGOT -->
-    <section id="view-forgot" class="view hidden">
-      <h1 data-i18n="forgot_title">Reset password</h1>
-
-      <label>
-        <span data-i18n="email">Email</span>
-        <input id="forgotEmail" type="email" autocomplete="email" required />
-      </label>
-
-      <button id="btnForgot" class="btn primary" data-i18n="btn_reset">Send reset link</button>
-      <button id="backLogin2" class="btn ghost" data-i18n="btn_back_login">Back to Sign In</button>
-    </section>
-
-    <!-- LOBBY -->
-    <section id="view-lobby" class="view hidden">
-      <div class="userbar">
-        <div class="user">
-          <img id="uiAvatar" class="avatar" src="assets/avatars/1.png" alt="avatar" />
-          <div class="meta">
-            <div id="uiEmail">user</div>
-            <div class="rating"><span data-i18n="rating">Rating</span>: <b id="uiRating">1000</b></div>
+  <!-- LOBBY -->
+  <div id="lobby" class="card hidden">
+    <div class="topbar">
+      <div class="profile">
+        <img id="profile-avatar" class="avatar" src="assets/avatars/pirate_avatar_1.jpg">
+        <div>
+          <div id="profile-name">Username</div>
+          <div class="badges">
+            <span class="badge" id="rating-badge">1000</span>
+            <span class="badge coin">10</span>
+            <span class="badge presence" id="presence-badge" data-i18n="free">Free</span>
           </div>
         </div>
-        <button id="btnLogout" class="btn ghost" data-i18n="btn_logout">Log out</button>
       </div>
-
-      <div class="card">
-        <h2 data-i18n="lobby_title">Lobby</h2>
-
-        <div class="grid-3">
-          <button class="btn size" data-size="4x3">Easy 4×3</button>
-          <button class="btn size" data-size="4x4">Medium 4×4</button>
-          <button class="btn size" data-size="4x6">Hard 4×6</button>
-        </div>
-
-        <div class="grid-3 mt">
-          <button id="btnCreateDuel" class="btn primary" data-i18n="create_duel">Create Duel</button>
-          <button id="btnSolo" class="btn" data-i18n="solo_mode">Solo Mode</button>
-          <button id="btnRefreshTables" class="btn" data-i18n="refresh">Refresh</button>
-        </div>
+      <div class="lang-switch">
+        <button class="lang-btn" data-lang="en">EN</button>
+        <button class="lang-btn" data-lang="ru">RU</button>
+        <button class="lang-btn" data-lang="es">ES</button>
       </div>
+    </div>
 
-      <div class="grid-2 mt">
-        <div class="card">
-          <h3 data-i18n="tables">Active duels</h3>
-          <ul id="tablesList" class="card-list"></ul>
-        </div>
-        <div class="card">
-          <h3 data-i18n="players">Online players</h3>
-          <ul id="playersList" class="card-list"></ul>
-        </div>
+    <div class="mode-buttons">
+      <button id="solo-mode" class="primary" data-i18n="solo_mode">Solo Mode</button>
+      <button id="duel-mode" class="secondary" data-i18n="duel_mode">Duel Mode</button>
+    </div>
+
+    <div id="level-select" class="level-select hidden">
+      <h2 data-i18n="choose_level">Choose level</h2>
+      <div class="levels">
+        <button class="level" data-level="easy" data-i18n="easy">Easy</button>
+        <button class="level" data-level="medium" data-i18n="medium">Medium</button>
+        <button class="level" data-level="hard" data-i18n="hard">Hard</button>
       </div>
-    </section>
+    </div>
 
-    <!-- GAME -->
-    <section id="view-game" class="view hidden">
-      <div class="game-top">
-        <button id="btnBackLobby" class="btn ghost" data-i18n="btn_back_lobby">Back to Lobby</button>
-        <div class="timer" id="turnTimer">5</div>
-      </div>
+    <div id="duel-panel" class="hidden">
+      <h2 data-i18n="online_players">Online players</h2>
+      <ul id="online-list" class="list"></ul>
+      <div id="invite-info" class="hint"></div>
+    </div>
 
-      <div id="board" class="board"></div>
+    <button id="btn-logout" class="link danger" data-i18n="logout">Log out</button>
+  </div>
 
-      <div class="scorebar">
-        <div>
-          <span data-i18n="you">You</span> — <b id="youScore">0</b>
-        </div>
-        <div class="hide-xs" id="opponentWrap">
-          <span data-i18n="opponent">Opponent</span> — <b id="oppScore">0</b>
-        </div>
-        <div>
-          <span data-i18n="pairs">Pairs</span>: <b id="pairsLeft">0</b>
-        </div>
-      </div>
-    </section>
-  </main>
+  <!-- GAME -->
+  <div id="game-screen" class="card hidden">
+    <div class="topbar">
+      <button id="btn-exit-game" class="link">&larr; <span data-i18n="back">Back</span></button>
+      <div id="game-info"></div>
+    </div>
+    <div id="board" class="board"></div>
+    <div class="banks">
+      <div class="bank" id="bank-p1">P1: <span>0</span></div>
+      <div class="bank" id="bank-p2">P2: <span>0</span></div>
+    </div>
+    <div id="turn-timer" class="timer">5</div>
+  </div>
+</div>
 
-  <script type="module" src="lang.js"></script>
-  <script type="module" src="main.js"></script>
+<script src="https://www.gstatic.com/firebasejs/7.24.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/7.24.0/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/7.24.0/firebase-firestore.js"></script>
+<script src="lang.js"></script>
+<script src="main.js"></script>
 </body>
 </html>
